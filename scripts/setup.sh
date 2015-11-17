@@ -1,6 +1,6 @@
 #!/bin/bash -eux
 
-# make sure vagrant user is created
+# Make sure vagrant user is created
 adduser --disabled-password --gecos "" vagrant
 
 # Add vagrant user to sudoers.
