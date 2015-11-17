@@ -1,0 +1,2 @@
+ansible-galaxy install -r requirements.txt -p ansible/roles --force
+packer push -name=michaelmitchell/ubuntu-14.04 template.jsoncker push -name=michaelmitchell/ubuntu-14.04 template.json
