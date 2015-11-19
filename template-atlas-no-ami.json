@@ -12,9 +12,7 @@
         "version": "0.0",
         "build": "{{env `ATLAS_BUILD_CONFIGURATION_VERSION`}}",
         "atlas_username": "{{env `ATLAS_BUILD_USERNAME`}}",
-        "atlas_name": "{{env `ATLAS_BUILD_NAME`}}",
-        "aws_access_key": "{{env `AWS_ACCESS_KEY`}}",
-        "aws_secret_key": "{{env `AWS_SECRET_KEY`}}"
+        "atlas_name": "{{env `ATLAS_BUILD_NAME`}}"
     },
     "provisioners": [
         {
@@ -113,30 +111,20 @@
             "ssh_username": "vagrant",
             "ssh_wait_timeout": "10000s",
             "tools_upload_flavor": "linux"
-        },
-        {
-            "type": "amazon-ebs",
-            "access_key": "{{user `aws_access_key`}}",
-            "secret_key": "{{user `aws_secret_key`}}",
-            "region": "ap-southeast-1",
-            "source_ami": "ami-96f1c1c4",
-            "instance_type": "t2.micro",
-            "ssh_username": "ubuntu",
-            "ami_name": "packer-ubuntu-14.04-amd64 {{ timestamp }}"
         }
     ],
     "post-processors": [
         {
             "type": "vagrant",
-            "keep_input_artifact": false
+			"output": "boxes/{{user `atlas_name`}}_{{.Provider}}.box"
         },
         {
             "type": "atlas",
+            "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
+            "artifact_type": "vagrant.box",
             "only": [
                 "vmware-iso"
             ],
-            "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
-            "artifact_type": "vagrant.box",
             "metadata": {
                 "provider": "vmware_desktop",
                 "version": "{{user `version`}}.{{user `build`}}"
@@ -144,51 +132,15 @@
         },
         {
             "type": "atlas",
-            "only": [
-                "vmware-iso"
-            ],
             "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
-            "artifact_type": "vmware.image"
-        },
-        {
-            "type": "atlas",
+            "artifact_type": "vagrant.box",
             "only": [
                 "virtualbox-iso"
             ],
-            "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
-            "artifact_type": "vagrant.box",
             "metadata": {
                 "provider": "virtualbox",
                 "version": "{{user `version`}}.{{user `build`}}"
             }
-        },
-        {
-            "type": "atlas",
-            "only": [
-                "virtualbox-iso"
-            ],
-            "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
-            "artifact_type": "virtualbox.image"
-        },
-        {
-            "type": "atlas",
-            "only": [
-                "amazon-ebs"
-            ],
-            "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
-            "artifact_type": "vagrant.box",
-            "metadata": {
-                "provider": "aws",
-                "version": "{{user `version`}}.{{user `build`}}"
-            }
-        },
-        {
-            "type": "atlas",
-            "only": [
-                "amazon-ebs"
-            ],
-            "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
-            "artifact_type": "amazon.image"
         }
     ]
 }
