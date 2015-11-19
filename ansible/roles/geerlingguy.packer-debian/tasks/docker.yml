@@ -1,0 +1,6 @@
+---
+- name: Ensure ssh server is isntalled
+  shell: "apt-get -y install openssh-server"
+
+- name: Ensure ssh server is running
+  shell: "service ssh start"

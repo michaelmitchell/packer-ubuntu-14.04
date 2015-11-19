@@ -1,18 +1,28 @@
 {
     "push": {
-        "name": "michaelmitchell/ubuntu-14.04",
+        "name": "jskoolaid/ubuntu-14.04",
         "exclude": [
             ".git",
+			".gitignore",
+			"boxes",
             "builds",
+			"credentials.sh",
+			"docker-box.sh",
             "isos",
-            "packer_cache"
+            "packer_cache",
+			"README.md"
         ]
     },
     "variables": {
         "version": "0.0",
         "build": "{{env `ATLAS_BUILD_CONFIGURATION_VERSION`}}",
         "atlas_username": "{{env `ATLAS_BUILD_USERNAME`}}",
-        "atlas_name": "{{env `ATLAS_BUILD_NAME`}}"
+        "atlas_name": "{{env `ATLAS_BUILD_NAME`}}",
+        "aws_access_key": "{{env `AWS_ACCESS_KEY`}}",
+        "aws_secret_key": "{{env `AWS_SECRET_KEY`}}",
+		"docker_email": "{{env `DOCKER_EMAIL`}}",
+		"docker_username": "{{env `DOCKER_USERNAME`}}",
+		"docker_password": "{{env `DOCKER_PASSWORD`}}"
     },
     "provisioners": [
         {
@@ -111,36 +121,137 @@
             "ssh_username": "vagrant",
             "ssh_wait_timeout": "10000s",
             "tools_upload_flavor": "linux"
-        }
+        },
+        {
+            "type": "amazon-ebs",
+            "access_key": "{{user `aws_access_key`}}",
+            "secret_key": "{{user `aws_secret_key`}}",
+            "region": "ap-southeast-1",
+            "source_ami": "ami-96f1c1c4",
+            "instance_type": "t2.micro",
+            "ssh_username": "ubuntu",
+			"ami_virtualization_type": "hvm",
+            "ami_name": "packer-ubuntu-14.04-amd64 {{ timestamp }}",
+			"ami_regions": [
+				"ap-southeast-1"
+			]
+        },
+		{
+			"type": "docker",
+			"image": "ubuntu:14.04.3",
+			"export_path": "image.tar"
+		}
     ],
     "post-processors": [
-        {
-            "type": "vagrant",
-			"output": "boxes/{{user `atlas_name`}}_{{.Provider}}.box"
-        },
-        {
-            "type": "atlas",
-            "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
-            "artifact_type": "vagrant.box",
-            "only": [
-                "vmware-iso"
-            ],
-            "metadata": {
-                "provider": "vmware_desktop",
-                "version": "{{user `version`}}.{{user `build`}}"
-            }
-        },
-        {
-            "type": "atlas",
-            "artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
-            "artifact_type": "vagrant.box",
-            "only": [
-                "virtualbox-iso"
-            ],
-            "metadata": {
-                "provider": "virtualbox",
-                "version": "{{user `version`}}.{{user `build`}}"
-            }
-        }
+		[
+			{
+				"type": "vagrant",
+				"output": "boxes/{{user `atlas_name`}}_{{.Provider}}.box",
+				"only": [
+					"vmware-iso",
+					"virtualbox-iso",
+					"amazon-ebs"
+				]
+			},
+			{
+				"type": "atlas",
+				"artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
+				"artifact_type": "vagrant.box",
+				"only": [
+					"vmware-iso"
+				],
+				"metadata": {
+					"provider": "vmware_desktop",
+					"version": "{{user `version`}}.{{user `build`}}"
+				}
+			},
+			{
+				"type": "atlas",
+				"artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
+				"artifact_type": "vagrant.box",
+				"only": [
+					"virtualbox-iso"
+				],
+				"metadata": {
+					"provider": "virtualbox",
+					"version": "{{user `version`}}.{{user `build`}}"
+				}
+			},
+			{
+				"type": "atlas",
+				"artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
+				"artifact_type": "vagrant.box",
+				"only": [
+					"amazon-ebs"
+				],
+				"metadata": {
+					"provider": "aws",
+					"version": "{{user `version`}}.{{user `build`}}"
+				}
+			}
+		],
+		[
+			{
+				"type": "atlas",
+				"artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
+				"artifact_type": "vmware.image",
+				"only": [
+					"vmware-iso"
+				]
+			},
+			{
+				"type": "atlas",
+				"artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
+				"artifact_type": "virtualbox.image",
+				"only": [
+					"virtualbox-iso"
+				]
+			},
+			{
+				"type": "atlas",
+				"artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
+				"artifact_type": "amazon.image",
+				"only": [
+					"amazon-ebs"
+				]
+			},
+			{
+				"type": "atlas",
+				"artifact": "{{user `atlas_username`}}/{{user `atlas_name`}}",
+				"artifact_type": "docker.image",
+				"only": [
+					"docker"
+				]
+			}
+		],
+		[
+			{
+				"type": "docker-import",
+				"repository": "{{user `docker_username`}}/{{user `atlas_name`}}",
+				"tag": "{{user `version`}}.{{user `build`}}",
+				"only": [
+					"docker"
+				]
+			},
+			{
+				"type": "docker-tag",
+				"repository": "{{user `docker_username`}}/{{user `atlas_name`}}",
+				"tag": "latest",
+				"only": [
+					"docker"
+				]
+			},
+			{
+				"type": "docker-push",
+				"login_email": "{{user `docker_email`}}",
+				"login_username": "{{user `docker_username`}}",
+				"login_password": "{{user `docker_password`}}",
+				"login_server": "https://index.docker.io/v1/",
+				"login": true,
+				"only": [
+					"docker"
+				]
+			}
+		]
     ]
 }

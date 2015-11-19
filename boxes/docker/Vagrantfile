@@ -1,0 +1,16 @@
+
+# The contents below were provided by the Packer Vagrant post-processor
+
+Vagrant.configure("2") do |config|
+  config.vm.provider "docker" do |d|
+	d.image = "jskoolaid/ubuntu-14.04:latest"
+	d.cmd = ["/usr/sbin/sshd", "-D"]
+	d.privileged = true
+	d.has_ssh = true
+  end
+end
+
+
+# The contents below (if any) are custom contents provided by the
+# Packer template during image build.
+
