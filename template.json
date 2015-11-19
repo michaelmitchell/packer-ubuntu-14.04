@@ -131,7 +131,7 @@
             "instance_type": "t2.micro",
             "ssh_username": "ubuntu",
 			"ami_virtualization_type": "hvm",
-            "ami_name": "packer-ubuntu-14.04-amd64 {{ timestamp }}",
+            "ami_name": "packer-ubuntu-14.04-amd64 {{user `version`}}.{{user `build`}}",
 			"ami_regions": [
 				"ap-southeast-1"
 			]
